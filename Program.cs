@@ -7,10 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<AuditInterceptor>();
+
 // add db context
-builder.Services.AddDbContext<PosterContext>(options =>
+builder.Services.AddDbContext<PosterContext>((provider, options) =>
 {
     options.UseInMemoryDatabase("Posters");
+    options.AddInterceptors(provider.GetRequiredService<AuditInterceptor>());
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

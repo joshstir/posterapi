@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging.Licenses;
+using PosterApi.DTO;
 using PosterApi.Models;
 
 namespace PosterApi.Controllers
@@ -44,14 +46,26 @@ namespace PosterApi.Controllers
         // PUT: api/Posters/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPoster(int id, Poster poster)
+        public async Task<IActionResult> PutPoster(int id, PosterDTO posterDTO)
         {
-            if (id != poster.Id)
+            if (id != posterDTO.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(poster).State = EntityState.Modified;
+            //get the poster by Id
+            var poster = await _context.Posters.FindAsync(id);
+
+            // if the poster isn't found throw a 404
+            if (poster == null)
+            {
+                return NotFound();
+            }
+
+            // update the poster with the new values
+            poster.Title = posterDTO.Title;
+            poster.Description = posterDTO.Description;            
+            poster.ImageUrl = posterDTO.ImageUrl;
 
             try
             {
@@ -75,12 +89,21 @@ namespace PosterApi.Controllers
         // POST: api/Posters
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Poster>> PostPoster(Poster poster)
+        public async Task<ActionResult<Poster>> PostPoster(PosterDTO posterDTO)
         {
+            var poster = new Poster
+            {
+                Title = posterDTO.Title,
+                Description = posterDTO.Description,
+                ImageUrl = posterDTO.ImageUrl
+            };
+
             _context.Posters.Add(poster);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPoster), new { id = poster.Id }, poster);
+            var returnPoster = posterDTO with {Id = poster.Id};        
+
+            return CreatedAtAction(nameof(GetPoster), new { id = poster.Id }, returnPoster);
         }
 
         // DELETE: api/Posters/5
