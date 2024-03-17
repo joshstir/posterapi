@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ namespace PosterApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PostersController : ControllerBase
     {
         private readonly PosterContext _context;
@@ -120,6 +122,18 @@ namespace PosterApi.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+         // This is a helper action. It allows you to easily view all the claims of the token.
+        [HttpGet("claims")]
+        public IActionResult Claims()
+        {
+            return Ok(User.Claims.Select(c =>
+                new
+                {
+                    c.Type,
+                    c.Value
+                }));
         }
 
         private bool PosterExists(int id)
